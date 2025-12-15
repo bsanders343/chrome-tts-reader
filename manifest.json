@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TTS Reader",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Read selected text aloud using native macOS voices",
   "permissions": [
     "tts",

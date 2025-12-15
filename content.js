@@ -1,15 +1,28 @@
-// Hardcoded pause shortcut: Cmd+Shift+P (Mac) or Ctrl+Shift+P (Windows/Linux)
+// Keyboard shortcuts for TTS control
+// macOS: Cmd+Shift+Key, Windows/Linux: Ctrl+Shift+Key
 const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
 document.addEventListener("keydown", (event) => {
-  const isPauseShortcut =
-    event.key.toLowerCase() === "p" &&
-    event.shiftKey &&
-    (isMac ? event.metaKey : event.ctrlKey) &&
-    !event.altKey;
+  const hasModifier = event.shiftKey && (isMac ? event.metaKey : event.ctrlKey) && !event.altKey;
+  if (!hasModifier) return;
 
-  if (isPauseShortcut) {
+  let action = null;
+
+  switch (event.key) {
+    case "p":
+    case "P":
+      action = "toggle-pause";
+      break;
+    case "ArrowLeft":
+      action = "restart-sentence";
+      break;
+    case "ArrowUp":
+      action = "restart-paragraph";
+      break;
+  }
+
+  if (action) {
     event.preventDefault();
-    chrome.runtime.sendMessage({ action: "toggle-pause" });
+    chrome.runtime.sendMessage({ action });
   }
 });
