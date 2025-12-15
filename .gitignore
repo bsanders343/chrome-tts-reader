@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+
+# Claude Code
+.claude/
+
+# Editor
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Package files (if npm added later)
+node_modules/
+package-lock.json
+
+# Build artifacts
+*.zip
