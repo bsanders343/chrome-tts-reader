@@ -1,3 +1,6 @@
+// TTS state tracking
+let ttsState = "stopped"; // "stopped" | "playing" | "paused"
+
 // On install: create context menu
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
@@ -14,17 +17,41 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
 });
 
-// Keyboard shortcut handler
+// Keyboard shortcut handler (for manifest-defined shortcuts)
 chrome.commands.onCommand.addListener((command, tab) => {
   if (command === "read-selection") {
     readSelectedText(tab.id);
   }
 });
 
+// Message handler for content script commands
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "toggle-pause") {
+    togglePause();
+    sendResponse({ state: ttsState });
+  } else if (message.action === "get-state") {
+    sendResponse({ state: ttsState });
+  }
+  return true;
+});
+
+// Toggle pause/resume
+function togglePause() {
+  if (ttsState === "playing") {
+    chrome.tts.pause();
+    ttsState = "paused";
+  } else if (ttsState === "paused") {
+    chrome.tts.resume();
+    ttsState = "playing";
+  }
+  // If stopped, do nothing
+}
+
 // Get selection and speak
 async function readSelectedText(tabId) {
   // Stop any current speech
   chrome.tts.stop();
+  ttsState = "stopped";
 
   try {
     // Inject script to get selection
@@ -51,8 +78,25 @@ async function readSelectedText(tabId) {
       pitch: prefs.pitch,
       enqueue: false,
       onEvent: (event) => {
-        if (event.type === "error") {
-          console.error("TTS error:", event.errorMessage);
+        switch (event.type) {
+          case "start":
+            ttsState = "playing";
+            break;
+          case "end":
+          case "cancelled":
+          case "interrupted":
+            ttsState = "stopped";
+            break;
+          case "pause":
+            ttsState = "paused";
+            break;
+          case "resume":
+            ttsState = "playing";
+            break;
+          case "error":
+            ttsState = "stopped";
+            console.error("TTS error:", event.errorMessage);
+            break;
         }
       }
     });
