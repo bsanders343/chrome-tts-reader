@@ -9,7 +9,7 @@ The Web Speech API has a [known Chromium bug](https://bugs.chromium.org/p/chromi
 ## Features
 
 - **Right-click menu**: Select text → Right-click → "Read Selection"
-- **Keyboard shortcut**: `Cmd+Shift+S` (macOS) / `Ctrl+Shift+S` (Windows/Linux)
+- **Keyboard shortcut**: `Cmd+Shift+P` (macOS) / `Ctrl+Shift+P` (Windows/Linux) to play/pause
 - **Voice settings**: Choose from available system voices
 - **Speed & pitch controls**: Adjust to your preference
 - **Persistent settings**: Your preferences sync across devices
@@ -27,8 +27,9 @@ The Web Speech API has a [known Chromium bug](https://bugs.chromium.org/p/chromi
 1. Highlight text on any webpage
 2. Either:
    - Right-click and select "Read Selection", or
-   - Press `Cmd+Shift+S`
-3. Click the extension icon to adjust voice, speed, and pitch
+   - Press `Cmd+Shift+P` to start reading
+3. Press `Cmd+Shift+P` again to pause/resume
+4. Click the extension icon to adjust voice, speed, and pitch
 
 ## Development
 

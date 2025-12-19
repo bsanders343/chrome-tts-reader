@@ -13,13 +13,6 @@
   "background": {
     "service_worker": "background.js"
   },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
-    }
-  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -36,10 +29,24 @@
   "commands": {
     "read-selection": {
       "suggested_key": {
-        "default": "Ctrl+Shift+S",
-        "mac": "Command+Shift+S"
+        "default": "Ctrl+Shift+P",
+        "mac": "Command+Shift+P"
       },
-      "description": "Read selected text aloud"
+      "description": "Play/pause reading"
+    },
+    "restart-sentence": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Left",
+        "mac": "Command+Shift+Left"
+      },
+      "description": "Restart current sentence"
+    },
+    "restart-paragraph": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Up",
+        "mac": "Command+Shift+Up"
+      },
+      "description": "Restart current paragraph"
     }
   }
 }

@@ -20,7 +20,7 @@ No content script is needed - text selection is retrieved via `chrome.scripting.
 - `chrome.scripting.executeScript()` - Get selected text from active tab
 - `chrome.storage.sync` - Persist user preferences (voiceName, rate, pitch)
 - `chrome.contextMenus` - Right-click "Read Selection" menu item
-- `chrome.commands` - Keyboard shortcut handler (Cmd+Shift+S on macOS)
+- `chrome.commands` - Keyboard shortcut handler (Cmd+Shift+P for play/pause, arrow keys for navigation)
 
 ## Development
 
@@ -38,5 +38,6 @@ No content script is needed - text selection is retrieved via `chrome.scripting.
 ## User Flow
 
 1. User highlights text on webpage
-2. Triggers via right-click context menu or Cmd+Shift+S
+2. Triggers via right-click context menu or Cmd+Shift+P
 3. Background worker stops any current speech, gets selection, speaks with user preferences
+4. Cmd+Shift+P again to pause/resume; Cmd+Shift+Left/Up to restart sentence/paragraph

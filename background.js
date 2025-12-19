@@ -8,6 +8,12 @@ let sentences = [];   // [{start, end}, ...]
 let paragraphs = [];  // [{start, end}, ...]
 let currentPrefs = {};
 
+// Smart navigation state
+let lastSentenceNavTime = 0;
+let lastParagraphNavTime = 0;
+const NAV_TIME_THRESHOLD = 1500;  // 1.5 seconds
+const NAV_PERCENT_THRESHOLD = 0.25;  // 25%
+
 // Parse text into sentence boundaries
 function parseSentences(text) {
   const boundaries = [];
@@ -68,6 +74,14 @@ function findCurrentBoundary(boundaries, charIndex) {
     }
   }
   return 0;
+}
+
+// Calculate what percent of a boundary has been read
+function getPercentRead(boundaries, boundaryIndex, charIndex) {
+  const boundary = boundaries[boundaryIndex];
+  const length = boundary.end - boundary.start;
+  if (length === 0) return 1;
+  return (charIndex - boundary.start) / length;
 }
 
 // Speak text from a given position
@@ -136,60 +150,71 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 // Keyboard shortcut handler (for manifest-defined shortcuts)
 chrome.commands.onCommand.addListener((command, tab) => {
-  if (command === "read-selection") {
-    readSelectedText(tab.id);
-  }
-});
-
-// Message handler for content script commands
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  switch (message.action) {
-    case "toggle-pause":
-      togglePause();
-      sendResponse({ state: ttsState });
+  switch (command) {
+    case "read-selection":
+      if (ttsState === "stopped") {
+        readSelectedText(tab.id);
+      } else if (ttsState === "playing") {
+        chrome.tts.pause();
+        ttsState = "paused";
+      } else if (ttsState === "paused") {
+        chrome.tts.resume();
+        ttsState = "playing";
+      }
       break;
     case "restart-sentence":
       restartSentence();
-      sendResponse({ state: ttsState });
       break;
     case "restart-paragraph":
       restartParagraph();
-      sendResponse({ state: ttsState });
       break;
-    case "get-state":
-      sendResponse({ state: ttsState });
-      break;
+  }
+});
+
+// Message handler for state queries
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "get-state") {
+    sendResponse({ state: ttsState });
   }
   return true;
 });
 
-// Toggle pause/resume
-function togglePause() {
-  if (ttsState === "playing") {
-    chrome.tts.pause();
-    ttsState = "paused";
-  } else if (ttsState === "paused") {
-    chrome.tts.resume();
-    ttsState = "playing";
-  }
-}
-
-// Restart from beginning of current sentence
+// Restart from beginning of current sentence (or go to previous)
 function restartSentence() {
   if (ttsState === "stopped" || !currentText) return;
 
+  const now = Date.now();
   const sentenceIndex = findCurrentBoundary(sentences, currentCharIndex);
-  const sentenceStart = sentences[sentenceIndex].start;
-  speakFrom(sentenceStart);
+  const percentRead = getPercentRead(sentences, sentenceIndex, currentCharIndex);
+  const withinTimeThreshold = (now - lastSentenceNavTime) < NAV_TIME_THRESHOLD;
+
+  lastSentenceNavTime = now;
+
+  // Go to previous if: quick double-tap OR near start of current sentence
+  if ((withinTimeThreshold || percentRead < NAV_PERCENT_THRESHOLD) && sentenceIndex > 0) {
+    speakFrom(sentences[sentenceIndex - 1].start);
+  } else {
+    speakFrom(sentences[sentenceIndex].start);
+  }
 }
 
-// Restart from beginning of current paragraph
+// Restart from beginning of current paragraph (or go to previous)
 function restartParagraph() {
   if (ttsState === "stopped" || !currentText) return;
 
+  const now = Date.now();
   const paragraphIndex = findCurrentBoundary(paragraphs, currentCharIndex);
-  const paragraphStart = paragraphs[paragraphIndex].start;
-  speakFrom(paragraphStart);
+  const percentRead = getPercentRead(paragraphs, paragraphIndex, currentCharIndex);
+  const withinTimeThreshold = (now - lastParagraphNavTime) < NAV_TIME_THRESHOLD;
+
+  lastParagraphNavTime = now;
+
+  // Go to previous if: quick double-tap OR near start of current paragraph
+  if ((withinTimeThreshold || percentRead < NAV_PERCENT_THRESHOLD) && paragraphIndex > 0) {
+    speakFrom(paragraphs[paragraphIndex - 1].start);
+  } else {
+    speakFrom(paragraphs[paragraphIndex].start);
+  }
 }
 
 // Get selection and speak
