@@ -20,7 +20,7 @@ No content script is needed - text selection is retrieved via `chrome.scripting.
 - `chrome.scripting.executeScript()` - Get selected text from active tab
 - `chrome.storage.sync` - Persist user preferences (voiceName, rate, pitch)
 - `chrome.contextMenus` - Right-click "Read Selection" menu item
-- `chrome.commands` - Keyboard shortcut handler (Cmd+Shift+P for play/pause, arrow keys for navigation)
+- `chrome.commands` - Keyboard shortcut handler (Cmd+Shift+P for play/pause, Left/Right arrows for sentence navigation)
 
 ## Development
 
@@ -40,4 +40,14 @@ No content script is needed - text selection is retrieved via `chrome.scripting.
 1. User highlights text on webpage
 2. Triggers via right-click context menu or Cmd+Shift+P
 3. Background worker stops any current speech, gets selection, speaks with user preferences
-4. Cmd+Shift+P again to pause/resume; Cmd+Shift+Left/Up to restart sentence/paragraph
+4. Navigation: Cmd+Shift+P to pause/resume; Cmd+Shift+Left for previous sentence (smart: double-tap or <25% read); Cmd+Shift+Right for next sentence
+
+## Constraints
+
+**Chrome limits extensions to 4 keyboard shortcuts.** Current shortcuts:
+1. Play/Pause (Cmd+Shift+P)
+2. Previous sentence (Cmd+Shift+Left)
+3. Next sentence (Cmd+Shift+Right)
+4. *(1 slot available)*
+
+Paragraph navigation (Cmd+Shift+Up/Down) was removed to stay within this limit. Sentence navigation was prioritized as the more useful granularity. If adding new shortcuts, one existing shortcut must be removed or the new feature must use a different trigger (context menu, popup button, etc.).

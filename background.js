@@ -5,12 +5,10 @@ let ttsState = "stopped"; // "stopped" | "playing" | "paused"
 let currentText = "";
 let currentCharIndex = 0;
 let sentences = [];   // [{start, end}, ...]
-let paragraphs = [];  // [{start, end}, ...]
 let currentPrefs = {};
 
 // Smart navigation state
 let lastSentenceNavTime = 0;
-let lastParagraphNavTime = 0;
 const NAV_TIME_THRESHOLD = 1500;  // 1.5 seconds
 const NAV_PERCENT_THRESHOLD = 0.25;  // 25%
 
@@ -32,33 +30,6 @@ function parseSentences(text) {
   }
 
   // If no sentences found, treat whole text as one sentence
-  if (boundaries.length === 0) {
-    boundaries.push({ start: 0, end: text.length });
-  }
-
-  return boundaries;
-}
-
-// Parse text into paragraph boundaries
-function parseParagraphs(text) {
-  const boundaries = [];
-  const regex = /\n\s*\n|\n/g;
-  let lastEnd = 0;
-  let match;
-
-  while ((match = regex.exec(text)) !== null) {
-    if (match.index > lastEnd) {
-      boundaries.push({ start: lastEnd, end: match.index });
-    }
-    lastEnd = match.index + match[0].length;
-  }
-
-  // Handle remaining text
-  if (lastEnd < text.length) {
-    boundaries.push({ start: lastEnd, end: text.length });
-  }
-
-  // If no paragraphs found, treat whole text as one paragraph
   if (boundaries.length === 0) {
     boundaries.push({ start: 0, end: text.length });
   }
@@ -165,8 +136,8 @@ chrome.commands.onCommand.addListener((command, tab) => {
     case "restart-sentence":
       restartSentence();
       break;
-    case "restart-paragraph":
-      restartParagraph();
+    case "next-sentence":
+      nextSentence();
       break;
   }
 });
@@ -198,22 +169,13 @@ function restartSentence() {
   }
 }
 
-// Restart from beginning of current paragraph (or go to previous)
-function restartParagraph() {
+// Skip to next sentence
+function nextSentence() {
   if (ttsState === "stopped" || !currentText) return;
 
-  const now = Date.now();
-  const paragraphIndex = findCurrentBoundary(paragraphs, currentCharIndex);
-  const percentRead = getPercentRead(paragraphs, paragraphIndex, currentCharIndex);
-  const withinTimeThreshold = (now - lastParagraphNavTime) < NAV_TIME_THRESHOLD;
-
-  lastParagraphNavTime = now;
-
-  // Go to previous if: quick double-tap OR near start of current paragraph
-  if ((withinTimeThreshold || percentRead < NAV_PERCENT_THRESHOLD) && paragraphIndex > 0) {
-    speakFrom(paragraphs[paragraphIndex - 1].start);
-  } else {
-    speakFrom(paragraphs[paragraphIndex].start);
+  const sentenceIndex = findCurrentBoundary(sentences, currentCharIndex);
+  if (sentenceIndex < sentences.length - 1) {
+    speakFrom(sentences[sentenceIndex + 1].start);
   }
 }
 
@@ -231,11 +193,10 @@ async function readSelectedText(tabId) {
     const text = results[0]?.result?.trim();
     if (!text) return;
 
-    // Store text and parse boundaries
+    // Store text and parse sentence boundaries
     currentText = text;
     currentCharIndex = 0;
     sentences = parseSentences(text);
-    paragraphs = parseParagraphs(text);
 
     // Load user preferences
     currentPrefs = await chrome.storage.sync.get({

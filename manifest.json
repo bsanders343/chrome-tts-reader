@@ -39,14 +39,14 @@
         "default": "Ctrl+Shift+Left",
         "mac": "Command+Shift+Left"
       },
-      "description": "Restart current sentence"
+      "description": "Previous sentence"
     },
-    "restart-paragraph": {
+    "next-sentence": {
       "suggested_key": {
-        "default": "Ctrl+Shift+Up",
-        "mac": "Command+Shift+Up"
+        "default": "Ctrl+Shift+Right",
+        "mac": "Command+Shift+Right"
       },
-      "description": "Restart current paragraph"
+      "description": "Next sentence"
     }
   }
 }

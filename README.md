@@ -9,7 +9,10 @@ The Web Speech API has a [known Chromium bug](https://bugs.chromium.org/p/chromi
 ## Features
 
 - **Right-click menu**: Select text → Right-click → "Read Selection"
-- **Keyboard shortcut**: `Cmd+Shift+P` (macOS) / `Ctrl+Shift+P` (Windows/Linux) to play/pause
+- **Keyboard shortcuts**:
+  - `Cmd+Shift+P` to play/pause
+  - `Cmd+Shift+Left` to go to previous sentence
+  - `Cmd+Shift+Right` to skip to next sentence
 - **Voice settings**: Choose from available system voices
 - **Speed & pitch controls**: Adjust to your preference
 - **Persistent settings**: Your preferences sync across devices
@@ -28,7 +31,10 @@ The Web Speech API has a [known Chromium bug](https://bugs.chromium.org/p/chromi
 2. Either:
    - Right-click and select "Read Selection", or
    - Press `Cmd+Shift+P` to start reading
-3. Press `Cmd+Shift+P` again to pause/resume
+3. While reading:
+   - `Cmd+Shift+P` to pause/resume
+   - `Cmd+Shift+Left` to go back a sentence (smart: double-tap or early in sentence goes to previous)
+   - `Cmd+Shift+Right` to skip to next sentence
 4. Click the extension icon to adjust voice, speed, and pitch
 
 ## Development
