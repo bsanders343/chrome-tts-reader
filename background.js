@@ -15,7 +15,8 @@ const NAV_PERCENT_THRESHOLD = 0.25;  // 25%
 // Parse text into sentence boundaries
 function parseSentences(text) {
   const boundaries = [];
-  const regex = /[.!?]+[\s]+|[.!?]+$/g;
+  // Match: sentence-ending punctuation, OR newline followed by capital/quote (headlines, new paragraphs)
+  const regex = /[.!?]+[\s]+|[.!?]+$|\n(?=[A-Z"\u201C])/g;
   let lastEnd = 0;
   let match;
 
