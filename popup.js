@@ -12,19 +12,50 @@ document.addEventListener("DOMContentLoaded", async () => {
     chrome.tts.getVoices((v) => resolve(v));
   });
 
-  // Filter to English, prefer local voices, sort alphabetically
+  // Identify premium/enhanced voices for better quality
+  const isPremiumVoice = (name) => {
+    const premiumPatterns = [
+      /premium/i,
+      /enhanced/i,
+      /neural/i,
+      /wavenet/i,
+      /natural/i,
+      /studio/i
+    ];
+    return premiumPatterns.some((pattern) => pattern.test(name));
+  };
+
+  // Quality tier for sorting (lower = better)
+  const getVoiceQualityTier = (voice) => {
+    const name = voice.voiceName;
+    if (isPremiumVoice(name)) return 0; // Premium voices first
+    if (!voice.localService) return 1; // Remote/cloud voices second
+    return 2; // Standard local voices last
+  };
+
+  // Filter to English, sort by quality tier then alphabetically
   const englishVoices = voices
     .filter((v) => v.lang && v.lang.startsWith("en"))
     .sort((a, b) => {
-      if (a.localService !== b.localService) return b.localService ? 1 : -1;
+      const tierA = getVoiceQualityTier(a);
+      const tierB = getVoiceQualityTier(b);
+      if (tierA !== tierB) return tierA - tierB;
       return a.voiceName.localeCompare(b.voiceName);
     });
 
-  // Populate dropdown
+  // Populate dropdown with quality indicators
   englishVoices.forEach((v) => {
     const option = document.createElement("option");
     option.value = v.voiceName;
-    option.textContent = `${v.voiceName}${v.localService ? "" : " (remote)"}`;
+
+    let qualityLabel = "";
+    if (isPremiumVoice(v.voiceName)) {
+      qualityLabel = " ★";
+    } else if (!v.localService) {
+      qualityLabel = " (cloud)";
+    }
+
+    option.textContent = `${v.voiceName}${qualityLabel}`;
     voiceSelect.appendChild(option);
   });
 
@@ -35,7 +66,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     pitch: 1.0
   });
 
-  voiceSelect.value = prefs.voiceName;
+  // Auto-select best available voice if none saved
+  if (!prefs.voiceName && englishVoices.length > 0) {
+    const bestVoice = englishVoices[0]; // Already sorted by quality
+    voiceSelect.value = bestVoice.voiceName;
+    chrome.storage.sync.set({ voiceName: bestVoice.voiceName });
+  } else {
+    voiceSelect.value = prefs.voiceName;
+  }
   rateInput.value = prefs.rate;
   pitchInput.value = prefs.pitch;
   rateValue.textContent = prefs.rate;
